@@ -21,13 +21,15 @@
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/loader.js"></script>
   </head>
   <style>
+    html,
+    body {
+      height: 100%;
+    }
+
     :root {
       --border-stroke: 1px solid #424242;
     }
 
-    body {
-      height: 100vh;
-    }
     .editor-head-container,
     .editor-main-container,
     .editor-footer-container {
@@ -78,10 +80,6 @@
       transition: all 0.3s ease;
     }
 
-    .error {
-      color: red;
-    }
-
     .monaco-editor .line-numbers {
       left: -20px !important;
     }
@@ -125,14 +123,14 @@
 
     .collapse-code.clicked .fa-chevron-right,
     .collapse-output.clicked .fa-chevron-left {
-      transform: rotate(0deg); /* Reset the rotation for the right chevron */
+      transform: rotate(0deg);
     }
 
     #editor {
       width: 100%;
       height: 600px;
-      transition: opacity 0.3s ease; /* Add transition for opacity */
-      opacity: 1; /* Set initial opacity */
+      transition: opacity 0.3s ease;
+      opacity: 1;
     }
 
     #compiledOutput {
@@ -146,13 +144,13 @@
     }
 
     #compiledOutput.collapsed {
-      opacity: 0; /* Change opacity when collapsed */
+      opacity: 0;
       pointer-events: none;
     }
 
     #editor.collapsed {
-      opacity: 0; /* Change opacity when collapsed */
-      pointer-events: none; /* Disable pointer events when collapsed */
+      opacity: 0;
+      pointer-events: none;
     }
     .monaco-editor {
       width: inherit !important;
@@ -160,9 +158,6 @@
     .monaco-editor .overflow-guard {
       width: inherit !important;
     }
-    /* .monaco-editor .view-lines.monaco-mouse-cursor-text {
-      width: 90% !important;
-    } */
 
     .editor-collapse.expanded-column2 .view-lines.monaco-mouse-cursor-text {
       width: 1284px !important;
@@ -212,6 +207,10 @@
       /* opacity: 0.5; */
     }
 
+    .output-column {
+      text-align: right;
+    }
+
     @keyframes spin {
       0% {
         transform: rotate(0deg);
@@ -220,15 +219,38 @@
         transform: rotate(360deg);
       }
     }
+
+    @media (min-width: 500px) {
+      .main-area {
+        padding: 0px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .editor-footer-container {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 9;
+      }
+      .loader {
+        top: 40%;
+        left: 45%;
+      }
+      .output-column {
+        text-align: left;
+      }
+    }
   </style>
   <body>
     <div class="container-fluid m-0 p-0 overflow-hidden h-100">
       <div class="row m-0 p-0 h-100 area">
-        <div
-          class="col-12 h-100 main-area"
-          style="background-color: #10162f; padding: 40px"
-        >
+        <div class="col-12 h-100 main-area" style="padding: 0px">
           <!-- header  -->
+
           <div class="editor-head-container">
             <div class="row p-0 m-0 w-100">
               <div
@@ -236,63 +258,88 @@
                 style="padding: 10px 20px"
               >
                 <button class="transparent-button">
-                  <img src="./logo.png" height="30px" />
+                  <img src="./kod-logo.png" height="30px" />
                 </button>
               </div>
             </div>
           </div>
-          <div class="editor-subheader text-white">
-            <div class="row p-0 m-0 w-100">
-              <div
-                id="codeColumn"
-                class="collapse-column"
-                style="padding: 10px 30px; border-right: var(--border-stroke)"
-              >
-                <button
-                  class="transparent-button collapse-code header-btns text-white"
-                  id="toggleCodeButton"
-                  onclick="collapseCode()"
+          <div class="row p-0 m-0 w-100">
+            <div class="col-sm-6 col-xs-6 p-0">
+              <div class="row p-0 m-0 w-100">
+                <div
+                  id="codeColumn"
+                  class="col-12 editor-header"
+                  style="
+                    padding: 10px 30px;
+                    border-right: var(--border-stroke);
+                    background: #000;
+                    border-bottom: var(--border-stroke);
+                    border-left: var(--border-stroke);
+                  "
                 >
-                  <i class="fa-solid fa-chevron-left mr-3"></i> Code
-                </button>
-              </div>
-              <div
-                id="outputColumn"
-                class="text-right text-white collapse-column"
-                style="padding: 10px 30px"
-              >
-                <button
-                  class="transparent-button collapse-output header-btns code text-white"
-                  id="toggleOutputButton"
-                  onclick="collapseOutput()"
+                  <button
+                    class="transparent-button collapse-code header-btns text-white"
+                    id="toggleCodeButton"
+                  >
+                    <i class="fa-solid fa-chevron-left mr-3"></i> Code
+                  </button>
+                </div>
+                <div
+                  class="col-12 pr-0 pl-0 text-white editor-column"
+                  id="editorColumn"
+                  style="
+                    padding: 0px 15px;
+                    font-size: 20px;
+                    border-right: var(--border-stroke);
+                  "
                 >
-                  Output <i class="fa-solid fa-chevron-right ml-3"></i>
-                </button>
+                  <div id="editor" style="width: 100%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-xs-6 p-0">
+              <div class="row p-0 m-0 w-100 h-100">
+                <div
+                  id="outputColumn"
+                  class="col-12 editor-header output-column"
+                  style="
+                    padding: 10px 30px;
+                    font-size: 20px;
+                    background: #000;
+                    height: fit-content;
+                    border-bottom: var(--border-stroke);
+                    border-right: var(--border-stroke);
+                  "
+                >
+                  <button
+                    class="transparent-button collapse-output header-btns code text-white"
+                    id="toggleOutputButton"
+                  >
+                    Output <i class="fa-solid fa-chevron-right ml-3"></i>
+                  </button>
+                </div>
+                <div
+                  class="col-12 text-white editor-column"
+                  id="compilerColumn"
+                  style="
+                    padding: 20px 30px;
+                    font-size: 20px;
+                    background: #000;
+                    height: 600px;
+                    border-right: var(--border-stroke);
+                    height: 600px;
+                    overflow-y: scroll;
+                    padding-bottom: 100px;
+                  "
+                >
+                  <div id="compiledOutput">Output will be displayed here</div>
+                  <div id="loader" class="loader" style="display: none"></div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="editor-main-container">
-            <div class="row mr-0">
-              <div
-                class="editor-collapse pr-0 text-white"
-                id="editorColumn"
-                style="padding: 0px 15px; font-size: 20px"
-              >
-                <!-- Create a container for the editor -->
-                <div id="editor" style="width: 100%; height: 600px"></div>
-                <!-- Content 1 -->
-              </div>
-              <div
-                id="compilerColumn"
-                class="editor-collapse text-white"
-                style="padding: 20px 30px; font-size: 20px"
-              >
-                <div id="compiledOutput">Output will be displayed here</div>
-                <div id="loader" class="loader" style="display: none"></div>
-              </div>
-            </div>
-          </div>
-          <div class="editor-footer-container">
+
+          <div id="footerContainer" class="editor-footer-container">
             <div class="row p-0 m-0 w-100">
               <div class="col-12 justify-content-end text-right w-100 p-0">
                 <button
@@ -360,146 +407,94 @@
 
       initializeEditor();
 
-      function collapseCode() {
-        var codeButton = document.getElementById("toggleCodeButton");
-        var outputButton = document.getElementById("toggleOutputButton");
-
-        // Toggle clicked class for code button
-        codeButton.classList.toggle("clicked");
-
-        // Disable or enable output button based on the state of the code button
-        outputButton.disabled = codeButton.classList.contains("clicked");
-
-        // Toggle collapsed class for code column
-        var column = document.getElementById("codeColumn");
-        column.classList.toggle("collapsed");
-
-        var editorColumn = document.getElementById("editorColumn");
-        editorColumn.classList.toggle("collapsed2");
-
-        // Toggle collapsed class for editor
-        var editor = document.getElementById("editor");
-        editor.classList.toggle("collapsed");
-      }
-
-      function collapseOutput() {
-        var codeButton = document.getElementById("toggleCodeButton");
-        var outputButton = document.getElementById("toggleOutputButton");
-
-        // Toggle clicked class for output button
-        outputButton.classList.toggle("clicked");
-
-        // Disable or enable code button based on the state of the output button
-        codeButton.disabled = outputButton.classList.contains("clicked");
-
-        // Toggle collapsed class for output column
-        var outputColumn = document.getElementById("outputColumn");
-        outputColumn.classList.toggle("collapsed");
-
-        // Toggle expanded or collapsed class for code column
-        var codeColumn = document.getElementById("codeColumn");
-        codeColumn.classList.toggle("expanded-column");
-        codeColumn.classList.toggle("collapsed");
-
-        var compilerColumn = document.getElementById("compilerColumn");
-        compilerColumn.classList.toggle("collapsed2");
-        compilerColumn.classList.toggle("display");
-
-        // Toggle expanded or collapsed class for code column
-        var editorColumn = document.getElementById("editorColumn");
-        editorColumn.classList.toggle("expanded-column2");
-        editorColumn.classList.toggle("collapsed2");
-
-        const compilerColumnData = document.getElementsByClassName(
-          ".editor-collapse.collapsed2.display"
-        );
-
-        if (!compilerColumnData) {
-        } else {
-          setTimeout(() => {
-            // Toggle collapsed class for output column
-            var compilerColumn = document.getElementById("compilerColumn");
-            compilerColumn.classList.toggle("collapsed2");
-            compilerColumn.classList.toggle("display");
-          }, 300);
-        }
-
-        compilerColumn.classList.toggle("hide");
-
-        const compiledOutputData = document.getElementsByClassName(
-          ".compiledOutput.collapsed"
-        );
-        if (!compiledOutputData) {
-          var compiledOutput = document.getElementById("compiledOutput");
-          compiledOutput.classList.toggle("collapsed");
-          compiledOutput.classList.toggle("display");
-        } else {
-          setTimeout(() => {
-            var compiledOutput = document.getElementById("compiledOutput");
-            compiledOutput.classList.toggle("collapsed");
-            compiledOutput.classList.toggle("display");
-          }, 300);
-        }
-      }
-
       async function runCode() {
-        const sourceCode = monaco.editor.getModels()[0].getValue();
-        const languageId = 63;
-        const apiKey = "633d3e61-a5dd-484d-ac4c-46d19593830d";
-        const clientId = "KzgGp2KU3rZNZVLS";
-        const clientSecret = "ZXQrgPz6CTvZxEW2J32sE4HyHpFjS7bp";
-
-        const url =
-          "https://ce.judge0.com/submissions?base64_encoded=false&wait=true";
-        document.getElementById("loader").style.display = "block";
-        document.getElementById("compiledOutput").style.display = "none";
-        document.getElementById("run-loader").style.display = "block";
-        document.getElementById("run-btn-text").style.display = "none";
-        const runBtn = document.getElementById("run-btn");
-        runBtn.classList.add("run-disabled");
-
-        try {
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Judge0-Key": apiKey,
-              "X-Judge0-Client-ID": clientId,
-              "X-Judge0-Client-Secret": clientSecret,
-            },
-            body: JSON.stringify({
-              source_code: sourceCode,
-              language_id: languageId,
-            }),
-          });
-
-          const data = await response.json();
-
-          const { status, stderr } = data;
-
-          if (stderr) {
-            CommonCallback();
-            document.getElementById("compiledOutput").classList.add("error");
-            document.getElementById("compiledOutput").innerText = `${stderr}`;
-            return;
+        if (
+          document.getElementById("run-btn-text").innerHTML?.includes("Retry")
+        ) {
+          if (window.innerWidth < 500) {
+            document.getElementById("toggleCodeButton").scrollIntoView({
+              behavior: "smooth",
+            });
+            document.getElementById("run-loader").style.display = "block";
+            document.getElementById("run-btn-text").style.display = "none";
+            setTimeout(() => {
+              document.getElementById("run-btn-text").innerHTML = "Run";
+              document.getElementById("run-loader").style.display = "none";
+              document.getElementById("run-btn-text").style.display = "block";
+            }, 500);
           }
+        } else {
+          const sourceCode = monaco.editor.getModels()[0].getValue();
+          const languageId = 63;
+          const apiKey = "633d3e61-a5dd-484d-ac4c-46d19593830d";
+          const clientId = "KzgGp2KU3rZNZVLS";
+          const clientSecret = "ZXQrgPz6CTvZxEW2J32sE4HyHpFjS7bp";
 
-          const output = data?.stdout;
-          CommonCallback();
-          // Display the submission in Content 2
-          document.getElementById("compiledOutput").innerText = `${output}`;
-          document.getElementById("compiledOutput").classList.remove("error");
-        } catch (error) {
-          console.error("Error submitting code to Judge0:", error.message);
-        }
+          const url =
+            "https://ce.judge0.com/submissions?base64_encoded=false&wait=true";
 
-        function CommonCallback() {
-          document.getElementById("compiledOutput").style.display = "block";
-          document.getElementById("loader").style.display = "none";
-          document.getElementById("run-loader").style.display = "none";
-          document.getElementById("run-btn-text").style.display = "block";
+          try {
+            const compiledOutput = document.getElementById("compiledOutput");
+            compiledOutput.scrollIntoView({
+              behavior: "smooth",
+            });
+            document.getElementById("loader").style.display = "block";
+            document.getElementById("compiledOutput").style.display = "none";
+            document.getElementById("run-loader").style.display = "block";
+            document.getElementById("run-btn-text").style.display = "none";
+            const runBtn = document.getElementById("run-btn");
+            runBtn.classList.add("run-disabled");
+            const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Judge0-Key": apiKey,
+                "X-Judge0-Client-ID": clientId,
+                "X-Judge0-Client-Secret": clientSecret,
+              },
+              body: JSON.stringify({
+                source_code: sourceCode,
+                language_id: languageId,
+              }),
+            });
 
-          runBtn.classList.remove("run-disabled");
+            const data = await response.json();
+            let output;
+            let error = false;
+            // console.log(data);
+            if (data?.stdout) {
+              output = data?.stdout;
+              error = false;
+            } else if (data?.compile_output) {
+              output = data?.compile_output;
+              error = true;
+            } else if (data?.stderr) {
+              output = data?.stderr;
+              error = true;
+            } else {
+              output = "There seems to be an issue with your code.";
+            }
+
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("compiledOutput").style.display = "block";
+
+            document.getElementById("run-loader").style.display = "none";
+            document.getElementById("run-btn-text").style.display = "block";
+
+            runBtn.classList.remove("run-disabled");
+            if (window.innerWidth < 500) {
+              document.getElementById("run-btn-text").innerHTML = "Retry";
+            }
+
+            document.getElementById("compiledOutput").innerText = `${output}`;
+            if (error) {
+              document.getElementById("compiledOutput").style.color = "red";
+            } else {
+              document.getElementById("compiledOutput").style.color = "white";
+            }
+          } catch (error) {
+            console.error("Error submitting code to Judge0:", error.message);
+          }
         }
       }
     </script>
